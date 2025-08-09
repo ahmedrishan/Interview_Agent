@@ -1,0 +1,87 @@
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <title>AI Interview Assistant</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .container { max-width: 700px; margin: auto; }
+        .form-group { margin-bottom: 20px; }
+        textarea, input { width: 100%; padding: 10px; }
+        .btn { padding: 10px 15px; background: #007BFF; color: white; border: none; cursor: pointer; }
+        .feedback-box { background: #f4f4f4; padding: 15px; margin-top: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AI Interview Assistant</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.question.label_tag }}<br>
+                {{ form.question }}
+            </div>
+            <div class="form-group">
+                {{ form.answer.label_tag }}<br>
+                {{ form.answer }}
+            </div>
+            <button type="submit" class="btn">Get Feedback</button>
+        </form>
+
+        {% if feedback %}
+        <div class="feedback-box">
+            <h3>AI Feedback:</h3>
+            <p>{{ feedback }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> {% endcomment %}
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+    <title>AI Interview Assistant</title>
+</head>
+<body>
+    <div id="question-box"></div>
+    <textarea id="answer" placeholder="Type your answer..."></textarea><br>
+    <button onclick="submitAnswer()">Submit Answer</button>
+    <button onclick="exitInterview()">Exit</button>
+    <div id="feedback-box"></div>
+
+    <script>
+        function fetchQuestion() {
+            fetch("/get-question/")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("question-box").innerText = data.question;
+            });
+        }
+
+        function submitAnswer() {
+            const answer = document.getElementById("answer").value;
+
+            fetch("/evaluate-answer/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: "answer=" + encodeURIComponent(answer)
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("feedback-box").innerText = "AI Feedback: " + data.feedback;
+                document.getElementById("answer").value = "";
+                setTimeout(fetchQuestion, 2000); // Load next question after feedback
+            });
+        }
+
+        function exitInterview() {
+            window.location.href = "/";  // Redirect or show goodbye message
+        }
+
+        // Load the first question on page load
+        window.onload = fetchQuestion;
+    </script>
+</body>
+</html>  {% endcomment %}

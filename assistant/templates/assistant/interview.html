@@ -1,0 +1,51 @@
+<!-- assistant/templates/interview.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Interview Assistant</title>
+</head>
+<body>
+    <h2>AI Interview Practice</h2>
+    <div id="question-box">Loading question...</div>
+    <textarea id="answer" rows="5" cols="50" placeholder="Type your answer here..."></textarea><br>
+    <button onclick="submitAnswer()">Submit</button>
+    <button onclick="exitInterview()">Exit</button>
+    <div id="feedback-box"></div>
+
+    <script>
+        function fetchQuestion() {
+            fetch("/get-question/")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("question-box").innerText = data.question;
+            });
+        }
+
+        function submitAnswer() {
+            const answer = document.getElementById("answer").value;
+
+            fetch("/evaluate-answer/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: "answer=" + encodeURIComponent(answer)
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("feedback-box").innerText = "Feedback: " + data.feedback;
+                document.getElementById("answer").value = "";
+                setTimeout(fetchQuestion, 1000);  // Load next question after 1s
+            });
+        }
+
+        function exitInterview() {
+            window.location.href = "/";  // Or redirect to a home page
+        }
+
+        // Load the first question on page load
+        window.onload = fetchQuestion;
+    </script>
+</body>
+</html>
